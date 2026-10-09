@@ -1,39 +1,56 @@
-name: Build UEFI for active devices
+name: Build UEFI for pipa
 on:
   push:
     branches: ["main"]
     paths:
+      - '.github/workflows/**'
       - 'Binaries'
+      - 'BootShim/**'
       - 'Common/**'
       - 'Mu_Basecore'
       - 'MuPatches/**'
       - 'Platforms/**'
+      - 'Resources/**'
       - 'Silicon/**'
       - 'Silicium-ACPI'
+      - 'build_uefi.py'
+      - 'pip-requirements.txt'
+      - 'setup_env.sh'
   workflow_dispatch:
   pull_request:
-    types: [opened, reopened]
+    types: [opened, synchronize, reopened]
     paths:
+      - '.github/workflows/**'
       - 'Binaries'
+      - 'BootShim/**'
       - 'Common/**'
       - 'Mu_Basecore'
       - 'MuPatches/**'
       - 'Platforms/**'
+      - 'Resources/**'
       - 'Silicon/**'
       - 'Silicium-ACPI'
+      - 'build_uefi.py'
+      - 'pip-requirements.txt'
+      - 'setup_env.sh'
 env:
   CI_BUILD: true
 jobs:
   build:
+    name: Build pipa (DEBUG)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - name: Build UEFI for active devices
-        run: bash ./setup_env.sh -p apt && bash ./build_active_devices.sh -r DEBUG
-
-      - name: Upload UEFI images
+        with:
+          submodules: recursive
+      - name: Install build dependencies
+        run: bash ./setup_env.sh -p apt
+      - name: Build Xiaomi Pad 6 UEFI only
+        run: python3 ./build_uefi.py -d pipa -r DEBUG -c
+      - name: Upload pipa UEFI image
         uses: actions/upload-artifact@v7
         with:
-          name: uefi-images
-          path: ./Mu-*
+          name: pipa-uefi-debug
+          path: Mu-pipa.img
+          if-no-files-found: error
           compression-level: 9
